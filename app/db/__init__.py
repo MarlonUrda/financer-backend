@@ -1,4 +1,4 @@
-from db import session
-from db import base
+from .session import get_db, engine, lifespan
+from .base import Base, metadata
 
-__all__ = ["session", "base"]
+__all__ = ["get_db", "engine", "Base", "metadata", "lifespan"]

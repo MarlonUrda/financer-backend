@@ -1,12 +1,9 @@
+import uvicorn
 from fastapi import FastAPI
-from app.api import user, auth, transaction
-from contextlib import asynccontextmanager
-from app.db import Base, engine
+from api import user, auth, transaction
+from db import lifespan
+from models import *
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    yield
 
 app = FastAPI(lifespan=lifespan)
 
