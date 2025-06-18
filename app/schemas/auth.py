@@ -45,6 +45,7 @@ class VerifyEmailResponse(BaseModel):
 
 class VerifyCode(BaseModel):
     code: str = Field(..., description="Verification code sent to the user's email")
+    email: str = Field(..., max_length=100, min_length=5, description="Email address of the user")
 
 class VerifyCodeResponse(BaseModel):
     success: bool = Field(..., description="Indicates if the verification code is valid")
@@ -53,7 +54,7 @@ class VerifyCodeResponse(BaseModel):
 
 class NewPasswordRequest(BaseModel):
     new_password: str = Field(..., max_length=300, min_length=8, description="New password for user authentication")
-    confirm_password: str = Field(..., max_length=300, min_length=8, description="Confirm new password for user authentication")
+    email: str = Field(..., max_length=100, min_length=5, description="Email address of the user")
 
 class NewPasswordResponse(BaseModel):
     success: bool = Field(..., description="Indicates if the password change was successful")

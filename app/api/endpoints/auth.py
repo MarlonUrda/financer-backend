@@ -6,6 +6,8 @@ from core.security import hash_pwd, generate_token, verify_pwd, decode_token
 from db import get_db
 import schemas.auth as auth
 from models.user import User
+from utils import get_user_by_email, generate_unique_code, verify_code, deactivate_expired_codes
+from services import send_email
 
 router = APIRouter()
 
@@ -60,6 +62,43 @@ async def login(request: auth.UserLoginRequest, db: AsyncSession = Depends(get_d
   token = generate_token(user.id)
   return auth.UserLoginResponse(success=True, message="User logged in successfully", code=200, token=token)
 
-@router.post("/send")
-async def sendEmail():
-   return { "message": "Send Email fetched" }
+@router.post("/send", response_model=auth.SendRecoverEmailResponse)
+async def sendEmail(request: auth.SendRecoverEmail, db: AsyncSession = Depends(get_db)):
+   await deactivate_expired_codes(db)
+   user = await get_user_by_email(db, request.email)
+   if not user:
+       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+   code = await generate_unique_code(db, user.id)
+   mail = send_email(
+      subject="Recover your Password",
+      body=f"Please use the following code to recover your password: {code}",
+      to_email=user.email,
+      from_email="noreply@example.com",
+   )
+   if not mail:
+       return auth.SendRecoverEmailResponse(success=False, message="Error sending email", code=500)
+   return auth.SendRecoverEmailResponse(success=True, message="Recovery email sent", code=200)
+
+@router.post("/verify", response_model=auth.VerifyCodeResponse)
+async def verify(request: auth.VerifyCode, db: AsyncSession = Depends(get_db)):
+   user = await get_user_by_email(db, request.email)
+   if not user:
+      return auth.VerifyCodeResponse(success=False, message="User not found", code=404)
+
+   is_valid = await verify_code(db=db, user_id=user.id, code=request.code)
+
+   if not is_valid:
+      return auth.VerifyCodeResponse(success=False, message="Invalid or expired verification code", code=400)
+
+   return auth.VerifyCodeResponse(success=True, message="Verification code is valid", code=200)
+
+@router.post("/change-password", response_model=auth.NewPasswordResponse)
+async def change_password(request: auth.NewPasswordRequest, db: AsyncSession = Depends(get_db)):
+   user = await get_user_by_email(db, request.email)
+   if not user:
+      return auth.NewPasswordResponse(success=False, message="User not found", code=404)
+
+   user.password = hash_pwd(request.new_password)
+   db.add(user)
+   await db.commit()
+   return auth.NewPasswordResponse(success=True, message="Password changed successfully", code=200)
