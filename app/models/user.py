@@ -12,5 +12,7 @@ class User(Base):
   phone: Mapped[str] = mapped_column(String(15), unique=True)
   email: Mapped[str] = mapped_column(String(100), unique=True)
   password: Mapped[str] = mapped_column(String(300))
-  created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
+  created_at: Mapped[datetime] = mapped_column(
+      default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+  )
   role_id: Mapped[int] = mapped_column(ForeignKey("role.id"))

@@ -11,7 +11,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
-logger.info(f"Database URL: {os.getenv('DB_URL')}")
 
 database_url = os.getenv("DB_URL")
 

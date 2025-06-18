@@ -8,7 +8,6 @@ class Transaction(Base):
   __tablename__ = "transactions"
 
   id: Mapped[int] = mapped_column(primary_key=True)
-  title: Mapped[str] = mapped_column(String(100))
   description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
   amount: Mapped[float] = mapped_column(DECIMAL(10, 2))
   created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
