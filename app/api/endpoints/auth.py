@@ -7,7 +7,7 @@ from db import get_db
 import schemas.auth as auth
 from models.user import User
 from utils import get_user_by_email, generate_unique_code, verify_code, deactivate_expired_codes
-from services import send_email
+from services.mailer import send_email
 
 router = APIRouter()
 
@@ -64,19 +64,26 @@ async def login(request: auth.UserLoginRequest, db: AsyncSession = Depends(get_d
 
 @router.post("/send", response_model=auth.SendRecoverEmailResponse)
 async def sendEmail(request: auth.SendRecoverEmail, db: AsyncSession = Depends(get_db)):
+
    await deactivate_expired_codes(db)
+
    user = await get_user_by_email(db, request.email)
    if not user:
        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-   code = await generate_unique_code(db, user.id)
+
+   user_email = user.email
+   user_id = user.id
+
+   code = await generate_unique_code(db, user_id)
+
    mail = send_email(
       subject="Recover your Password",
       body=f"Please use the following code to recover your password: {code}",
-      to_email=user.email,
-      from_email="noreply@example.com",
+      to_email=user_email,
    )
    if not mail:
        return auth.SendRecoverEmailResponse(success=False, message="Error sending email", code=500)
+       
    return auth.SendRecoverEmailResponse(success=True, message="Recovery email sent", code=200)
 
 @router.post("/verify", response_model=auth.VerifyCodeResponse)

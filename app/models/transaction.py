@@ -10,6 +10,7 @@ class Transaction(Base):
   id: Mapped[int] = mapped_column(primary_key=True)
   description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
   amount: Mapped[float] = mapped_column(DECIMAL(10, 2))
+  date: Mapped[str] = mapped_column(Text)
   created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
   type_id: Mapped[int] = mapped_column(ForeignKey("payment_types.id"))
