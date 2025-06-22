@@ -51,3 +51,17 @@ async def update(request: user.UpdateUserRequest, user_id: int, db: AsyncSession
     )
   
   return user.UpdateUserResponse(success=True, code=200, message="User updated successfully!", id=updated_user.id)
+
+@router.delete("/delete/{user_id}", response_model=user.DeleteUserResponse)
+async def delete_the_user(user_id: int, db: AsyncSession = Depends(get_db)):
+  try:
+    res = await crud_users.delete_user(db=db, user_id=user_id)
+    if not res:
+      return user.DeleteUserResponse(success=False, code=400, message="We cant do that right now.", id=None)
+  except:
+    raise HTTPException (
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail="Somthing went wrong."
+    )
+  
+  return user.DeleteUserResponse(success=True, code=200, message="User deleted succesfully!", id=res.id)
